@@ -82,8 +82,12 @@ const item=(d,ts=[],sn=false,sel=false)=>`<button class="item ${d.c}${sel?' sel'
 const save=()=>{LS.s('saved',saved);LS.s('notes',notes);LS.s('hls',hls);LS.s('stats',stats);LS.s('box',box);LS.s('recent',recent)};
 function search(q){const ts=terms(q),res=[];for(const d of DATA){if(!inScope(d)||!ts.every(t=>d.h.includes(t)))continue;let s=0;const tl=d.t.toLowerCase();if(d.n.toLowerCase()===q.toLowerCase())s+=1000;for(const t of ts){if(tl.includes(t))s+=40;if(tl.startsWith(t))s+=10;s+=Math.min(8,d.h.split(t).length-1)}res.push([s,d])}
  res.sort((a,b)=>b[0]-a[0]||a[1].i-b[1].i);return`<p class="note">${res.length} result${res.length==1?'':'s'}${res.length>80?' (best 80 shown)':''}</p>`+(res.slice(0,80).map(r=>item(r[1],ts,true)).join('')||'<p class="note">Nothing found. Try one word, or switch to Both codes.</p>')}
+let dp=null;const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true,ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;if(tab==='home'&&!topic&&!$('#q').value.trim())render()});
+window.addEventListener('appinstalled',()=>{dp=null;render()});
+function installCard(){if(standalone)return'';if(dp)return'<button class="big" data-act="install"><b>Install JURISCODIA</b><br><span class="tag">Add it to your home screen and use it offline.</span></button>';if(ios)return'<div class="tip"><b>Install on iPhone:</b> open this page in Safari, tap Share, then Add to Home Screen.</div>';return''}
 function home(){const last=byId[recent[0]],q=stats.a?Math.round(100*stats.c/stats.a):0,nn=Object.keys(notes).filter(k=>notes[k]).length;
- let h=`<div class="stats">${last?`<button class="stat" data-id="${last.id}"><span>Continue reading</span><b>${NAME[last.c]} s. ${esc(last.n)}</b><span>${esc(last.t.slice(0,40))}</span></button>`:'<div class="stat"><span>Continue reading</span><b>Nothing yet</b><span>Open any section</span></div>'}
+ let h=installCard()+`<div class="stats">${last?`<button class="stat" data-id="${last.id}"><span>Continue reading</span><b>${NAME[last.c]} s. ${esc(last.n)}</b><span>${esc(last.t.slice(0,40))}</span></button>`:'<div class="stat"><span>Continue reading</span><b>Nothing yet</b><span>Open any section</span></div>'}
  <button class="stat" data-t="saved"><span>Saved and noted</span><b>${saved.length} saved · ${nn} notes</b></button>
  <button class="stat" data-t="study"><span>Quiz progress</span><b>${stats.a?q+'% correct':'Not started'}</b><span>${stats.a} answered</span></button>
  <button class="stat" data-t="study"><span>Flashcards</span><b>${Object.values(box).filter(b=>b>=3).length} known</b><span>of ${DATA.filter(real).length} sections</span></button></div><h2>Browse by topic</h2><div class="tiles">`;
@@ -132,7 +136,8 @@ document.addEventListener('click',e=>{const t=e.target,g=t.closest('[data-go]');
  const a=t.closest('[data-act]');if(a){const x=a.dataset.act;
   if(x==='flash'){fc={q:[],i:0,f:false};render()}else if(x==='quiz'){qz={q:mkQ(),i:0,s:0,a:null};render()}else if(x==='exit'){fc=qz=null;render()}
   else if(x==='flip'){fc.f=true;render()}else if(x==='know'||x==='again'){const id=fc.id;box[id]=x==='know'?Math.min(5,(box[id]||0)+1):0;save();fc.i++;fc.f=false;render()}
-  else if(x==='nextq'){qz.i++;qz.a=null;render()}return}
+  else if(x==='nextq'){qz.i++;qz.a=null;render()}
+  else if(x==='install'&&dp){dp.prompt();dp.userChoice.then(()=>{dp=null;render()}).catch(()=>{})}return}
  const an=t.closest('[data-ans]');if(an){answer(+an.dataset.ans);render();return}
  const tb=t.closest('[data-t]');if(tb){tab=tb.dataset.t;if(tab!=='study')fc=qz=null;if(tb.closest('#nav')){$('#q').value='';if(tab==='home')topic=null}render()}});
 $('#main').addEventListener('toggle',e=>{const dt=e.target;if(dt.tagName!=='DETAILS'||!dt.open||dt.querySelector('.item'))return;dt.insertAdjacentHTML('beforeend',window['G'+dt.dataset.c][+dt.dataset.g].l.map(d=>item(d)).join(''))},true);
