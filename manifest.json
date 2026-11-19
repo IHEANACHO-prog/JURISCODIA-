@@ -1,11 +1,16 @@
 {
  "name": "JURISCODIA",
  "short_name": "JURISCODIA",
+ "id": "./index.html",
+ "description": "Offline study and reference app for the Nigerian Criminal Code and Penal Code, with search, topics, notes, flashcards and quizzes.",
+ "lang": "en",
+ "categories": ["education", "reference"],
  "start_url": "./index.html",
  "scope": "./",
  "display": "standalone",
- "background_color": "#0f4c52",
- "theme_color": "#0f4c52",
+ "orientation": "portrait",
+ "background_color": "#0e151c",
+ "theme_color": "#0e151c",
  "icons": [
   {
    "src": "icon-192.png",
